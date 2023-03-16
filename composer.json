@@ -1,0 +1,21 @@
+{
+    "name": "ay4t/ci4rest",
+    "description": "Advanced REST Controller yang dikembangkan untuk mempermudah dalam penerapan REST API",
+    "type": "library",
+    "require": {
+        "firebase/php-jwt": "^6.4"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ay4t\\Ci4rest\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ayatulloh Ahad R",
+            "email": "ayatulloh@indiega.net"
+        }
+    ],
+    "minimum-stability": "stable"
+}
