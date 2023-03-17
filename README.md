@@ -17,6 +17,13 @@ Install dengan menggunakan composer
 ```bash
   composer require ay4t/CI4Rest
 ```
+atau menggunakan github repository dengan github token:
+
+```bash
+composer config minimum-stability dev
+composer config repositories.CI4Rest vcs git@github.com:ay4t/CI4Rest.git
+composer require ay4t/ci4rest:main-dev
+```
     
 ## Contoh Penggunaan
 
