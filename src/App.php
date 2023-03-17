@@ -26,7 +26,7 @@
  * 
  */
 
-namespace Ay4t\CI4Rest;
+namespace Ay4t\Ci4rest;
 
 class App extends \Config\App
 {    

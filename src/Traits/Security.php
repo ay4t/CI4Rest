@@ -19,7 +19,7 @@
  * ----------	---	---------------------------------------------------------
  */
 
-namespace Ay4t\CI4Rest\Traits;
+namespace Ay4t\Ci4rest\Traits;
 
 use CodeIgniter\HTTP\IncomingRequest;
 

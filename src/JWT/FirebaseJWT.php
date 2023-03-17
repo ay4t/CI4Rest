@@ -16,7 +16,7 @@
 * ---------- --- ---------------------------------------------------------
 */
 
-namespace Ay4t\CI4Rest\JWT;
+namespace Ay4t\Ci4rest\JWT;
 
 use Exception;
 

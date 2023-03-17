@@ -19,9 +19,9 @@
  * ----------	---	---------------------------------------------------------
  */
 
-namespace Ay4t\CI4Rest;
+namespace Ay4t\Ci4rest;
 
-use Ay4t\CI4Rest\Traits\Security;
+use Ay4t\Ci4rest\Traits\Security;
 use CodeIgniter\RESTful\ResourceController;
 use Exception;
 
@@ -29,7 +29,7 @@ class RestController extends ResourceController
 {    
     use Security;
 
-    /** @return \Ay4t\Ci4Restcontroller\App(); */
+    /** @return \Ay4t\Ci4rest\App(); */
     protected $config;
     
     /** @return \Config\Services::request(); */
@@ -61,7 +61,7 @@ class RestController extends ResourceController
 
     public function __construct()
     {
-        $this->config               = new \Ay4t\CI4Rest\App();
+        $this->config               = new \Ay4t\Ci4rest\App();
         $this->db                   = \Config\Database::connect($this->config->rest_database_group, true);
         $this->request              = \Config\Services::request();
         $this->defaultFormat        = $this->config->rest_default_format;
@@ -205,7 +205,7 @@ class RestController extends ResourceController
 
         try {
 
-            $LibJWT         = new \Ay4t\CI4Rest\JWT\FirebaseJWT($JWT_SECRET_KEY, $JWT_TIME_TO_LIVE);
+            $LibJWT         = new \Ay4t\Ci4rest\JWT\FirebaseJWT($JWT_SECRET_KEY, $JWT_TIME_TO_LIVE);
             $encodedToken   = $LibJWT->headerOtenticate($header);
             $validateJWT    = $LibJWT->validateJWT($encodedToken);
             
