@@ -10,11 +10,11 @@
  * Last Modified: Thu Mar 02 2023
  * Modified By: Ayatulloh Ahad R
  * -------------------------
- * Copyright (c) 2023 Indiega Network 
+ * Copyright (c) 2023 Indiega Network
 
  * -------------------------
  * HISTORY:
- * Date      	By	Comments 
+ * Date      	By	Comments
 
  * ----------	---	---------------------------------------------------------
  */
@@ -26,15 +26,15 @@ use CodeIgniter\RESTful\ResourceController;
 use Exception;
 
 class RestController extends ResourceController
-{    
+{
     use Security;
 
     /** @return \Ay4t\Ci4rest\App(); */
     protected $config;
-    
+
     /** @return \Config\Services::request(); */
     protected $requst;
-    
+
     /** @var string */
     protected $defaultFormat;
 
@@ -43,16 +43,16 @@ class RestController extends ResourceController
 
     /** @var bool $check_cors description */
     protected $check_cors = false;
-    
+
     /** @var string */
     protected $use_JWT_refresh_token = false;
-    
+
     /** @var array */
     protected $rest_response = [];
-    
+
     /** @var int */
     protected $statusCode = 200;
-        
+
     /** @var array */
     protected $rest_allowed_method = [];
 
@@ -68,33 +68,36 @@ class RestController extends ResourceController
         $this->rest_allowed_method  = $this->config->rest_allowed_method;
         $this->rest_ajax_only       = $this->config->rest_ajax_only;
         $this->check_cors           = $this->config->check_cors;
-        
+
         $this->setResponseMessage(true, 'OK');
     }
-    
+
     /**
      * Fungsi default yang akan digunakan pada request dengan method GET
      * @return CodeIgniter\API\ResponseTrait::respond
      */
     public function index()
-    {       
-        $this->initMethod();        
-        $this->rest_response['test'] = 'ini method get';
+    {
+        $this->initMethod();
+
+        /** tambahkan code disini jika ingin berjalan secara global di semua child class */
+
         return $this->respond($this->rest_response, $this->statusCode);
     }
-    
+
     /**
      * Fungsi default yang akan digunakan pada request dengan method POST
      * @return CodeIgniter\API\ResponseTrait::respond
      */
-    public function store()
+    public function create()
     {
         $this->initMethod();
-        
-        $this->rest_response['test'] = 'ini method post';
+
+        /** tambahkan code disini jika ingin berjalan secara global di semua child class */
+
         return $this->respond($this->rest_response, $this->statusCode);
     }
-    
+
     /**
      * initMethod
      * @return this
@@ -109,9 +112,9 @@ class RestController extends ResourceController
         $this->useOnlyIPWhiteLists();
         $this->useIPBlacklistFilter();
         $this->useOnlyAjax();
-        
+
         /** filter hanya status dan message saja yang akan tampil di response */
-        if(!$this->rest_response[$this->config->rest_status_field_name]){            
+        if(!$this->rest_response[$this->config->rest_status_field_name]){
             $whitelist  = [$this->config->rest_status_field_name, $this->config->rest_message_field_name];
             $filtered   = array_intersect_key( $this->rest_response, array_flip( $whitelist ) );
             return $this->respond($filtered, $this->statusCode);
@@ -160,7 +163,7 @@ class RestController extends ResourceController
             $this->statusCode = 403;
             $this->setResponseMessage(false, 'Your IP address is blocked to access this endpoint');
         }
-    
+
     }
 
     private function useOnlyIPWhiteLists()
@@ -168,13 +171,13 @@ class RestController extends ResourceController
         if( !$this->config->rest_ip_whitelist_enabled ) return true;
 
         $ip_address = $this->request->getIPAddress();
-        $alwaysAllowed = ['127.0.0.1', '::1'];        
+        $alwaysAllowed = ['127.0.0.1', '::1'];
         if( !in_array($ip_address, array_merge($this->config->rest_ip_whitelist, $alwaysAllowed) ) ){
             $this->statusCode = 403;
             $this->setResponseMessage(false, 'Your IP address is not allowed to access this endpoint');
-        }        
+        }
     }
-    
+
     private function useMethodFilter(){
         $method = $this->request->getMethod();
         if(!in_array( strtoupper($method) , $this->rest_allowed_method)){
@@ -205,14 +208,14 @@ class RestController extends ResourceController
 
         try {
 
-            $LibJWT         = new \Ay4t\Ci4rest\JWT\FirebaseJWT($JWT_SECRET_KEY, $JWT_TIME_TO_LIVE);
+            $LibJWT         = new \Ay4t\CI4Rest\JWT\FirebaseJWT($JWT_SECRET_KEY, $JWT_TIME_TO_LIVE);
             $encodedToken   = $LibJWT->headerOtenticate($header);
             $validateJWT    = $LibJWT->validateJWT($encodedToken);
-            
+
             if($this->use_JWT_refresh_token){
                 unset($validateJWT->iat, $validateJWT->exp );
                 $time_start         = time();
-                $expired_time       = $time_start + $JWT_TIME_TO_LIVE;                
+                $expired_time       = $time_start + $JWT_TIME_TO_LIVE;
                 $payload            = (array) $validateJWT;
                 $payload['iat']     = $time_start;
                 $payload['exp']     = $expired_time;
@@ -220,13 +223,13 @@ class RestController extends ResourceController
             }
 
             return $validateJWT;
-            
+
         } catch (Exception $e) {
             $this->statusCode = 403;
             $this->setResponseMessage(false, $e->getMessage());
         }
     }
-    
+
     private function useSecureRequest()
     {
         if(!$this->config->force_https){
