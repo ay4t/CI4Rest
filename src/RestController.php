@@ -35,12 +35,6 @@ class RestController extends ResourceController
     /** @return \Config\Services::request(); */
     protected $requst;
 
-    /** @var bool $rest_ajax_only description */
-    protected $rest_ajax_only = false;
-
-    /** @var bool $check_cors description */
-    protected $check_cors = false;
-
     /** @var string */
     protected $use_JWT_refresh_token = false;
 
@@ -58,8 +52,6 @@ class RestController extends ResourceController
         $this->config               = new \Ay4t\Ci4rest\App();
         $this->db                   = \Config\Database::connect($this->config->rest_database_group, true);
         $this->request              = \Config\Services::request();
-        $this->rest_ajax_only       = $this->config->rest_ajax_only;
-        $this->check_cors           = $this->config->check_cors;
 
     }
 
@@ -202,7 +194,7 @@ class RestController extends ResourceController
      */
     private function useCORS()
     {
-        if($this->check_cors){
+        if($this->config->check_cors){
             $allow_any_cors_domain = ($this->config->allow_any_cors_domain) ? '*' : $this->request->getHeaderLine('Origin');
             if(!empty($this->config->allowed_cors_origins)){
                 if( !in_array($this->request->getHeaderLine('Origin'), $this->config->allowed_cors_origins) ){
@@ -229,7 +221,7 @@ class RestController extends ResourceController
      */
     private function useOnlyAjax()
     {
-        if($this->rest_ajax_only){
+        if($this->config->rest_ajax_only){
             if( !$this->request->isAJAX() ){
                 $this->statusCode = 403;
                 return $this->setResponseMessage(false, 'Only available for ajax request.');
@@ -373,7 +365,25 @@ class RestController extends ResourceController
             return $this->setResponseMessage(false, 'You must use the HTTPS protocol to access this endpoint');
         }
     }
+    
+    /**
+     * Fungsi untuk menambahkan response
+     * @param string $key
+     * @param string|array $value
+     * @return array
+     */
+    public function addResponse($key, $value = null){
+        // jika $key adalah array maka buat looping
+        if(is_array($key)){
+            foreach ($key as $k => $v) {
+                $this->rest_response[$k] = $v;
+            }
+            return $this->rest_response;
+        }
 
+        $this->rest_response[$key] = $value;
+        return $this->rest_response;
+    }
 
     protected function setResponseMessage( $status = true, $message = 'OK' ){
         $this->rest_response[ $this->config->rest_status_field_name ]     = $status;

@@ -38,22 +38,28 @@ public function index()
     $this->config->rest_auth    = 'JWT';
 
     /** untuk mengatur output format */
-    $this->defaultFormat        = 'json';
+    $this->config->rest_default_format        = 'json';
 
     /** setting true secara otomatis mendapatkan token JWT yang baru */
     $this->use_JWT_refresh_token = true;
 
     /** filter khusus untuk method yang hanya diperbolehkan */
-    $this->rest_allowed_method = ['POST', 'GET' ];
+    $this->config->rest_allowed_method = ['get', 'post'];
 
     /** filter jika ingin menggunakan hanya akses dengan AJAX / X-Requested-With:XMLHttpRequest header */
-    $this->rest_ajax_only = true;
+    $this->config->rest_ajax_only = true;
 
     /** memberikan header response untuk CORS */
-    $this->check_cors = true;
+    $this->config->check_cors = true;
     
-    /** custom tambahan untuk output response pada endpoint tertentu */
-    $this->rest_response['custom_respon'] = 'ini adalah custom response';
+    /** untuk menambahkan response secara manual */
+    $this->addResponse('some_response', 'some_value');
+
+    /** untuk menambahkan response secara manual dengan array */
+    $this->addResponse([
+        'some_response2' => 'some_value2',
+        'some_response3' => 'some_value3',
+    ]);
 
     return parent::index();
 }
