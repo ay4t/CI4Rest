@@ -120,6 +120,55 @@ class RestController extends ResourceController
         $this->useOnlyIPWhiteLists();
         $this->useIPBlacklistFilter();
         $this->useOnlyAjax();
+        $this->useKey();
+        
+    }
+
+    private function useKey()
+    {
+        // jika $this->config->rest_enable_keys = true check table exist
+        if($this->config->rest_enable_keys){
+            if(!$this->db->tableExists($this->config->rest_keys_table)){
+                $this->statusCode = 500;
+                $this->setResponseMessage(false, 'Table '.$this->config->rest_keys_table.' not found');
+            } else {
+
+                if($this->config->rest_key_column){
+                    $key = $this->request->getGet($this->config->rest_key_column);
+                    if(empty($key)){
+                        $this->statusCode = 403;
+                        $this->setResponseMessage(false, 'API key is required');
+                    }
+
+                    // check key kedalam table 
+                    $query = $this->db->table($this->config->rest_keys_table)
+                        ->where($this->config->rest_key_column, $key)
+                        ->get()
+                        ->getRow();
+                    if($query){
+                        // jika key ditemukan, cek apakah key tersebut masih aktif
+                        if($query->active == 0){
+                            $this->statusCode = 403;
+                            $this->setResponseMessage(false, 'API key is inactive');
+                        }
+
+                        // jika ip_addresses != NULL validate dengan IP address yang request
+                        if(!empty($query->ip_addresses)){
+                            $ip_addresses = explode(',', $query->ip_addresses);
+                            if(!in_array($this->request->getIPAddress(), $ip_addresses)){
+                                $this->statusCode = 403;
+                                $this->setResponseMessage(false, 'Your IP address is not allowed to access this endpoint');
+                            }
+                        }
+                        
+                    } else {
+                        $this->statusCode = 403;
+                        $this->setResponseMessage(false, 'API key is invalid');
+                    }
+                }
+
+            }
+        }
     }
 
     private function useCORS()

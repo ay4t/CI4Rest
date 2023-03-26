@@ -250,6 +250,7 @@ class App extends \Config\App
     |       `ignore_limits` TINYINT(1) NOT NULL DEFAULT '0',
     |       `is_private_key` TINYINT(1)  NOT NULL DEFAULT '0',
     |       `ip_addresses` TEXT NULL DEFAULT NULL,
+    |       `active` INT(1) NOT NULL DEFAULT '1',
     |       `date_created` INT(11) NOT NULL,
     |       PRIMARY KEY (`id`)
     |   ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
