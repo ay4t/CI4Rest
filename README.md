@@ -12,15 +12,10 @@ HARAP DIPERHATIKAN:
 
 ## Installation
 
-Install dengan menggunakan composer
+menggunakan github repository dengan github token:
 
 ```bash
-  composer require ay4t/CI4Rest
-```
-atau menggunakan github repository dengan github token:
-
-```bash
-composer config minimum-stability dev
+composer config minimum-stability dev ( ini optional jika anda ingin menginstall versi dev )
 composer config repositories.CI4Rest vcs git@github.com:ay4t/CI4Rest.git
 composer require ay4t/ci4rest:main-dev
 ```
@@ -31,6 +26,7 @@ pastikan Controller anda sudah extends controller dengan RestController
 class NamaController extends \Ay4t\Ci4rest\RestController
 ```
 
+contoh penerapan pada method index controller anda
 ```bash
 public function index()
 {
