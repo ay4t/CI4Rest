@@ -120,10 +120,13 @@ class RestController extends ResourceController
         $this->useOnlyIPWhiteLists();
         $this->useIPBlacklistFilter();
         $this->useOnlyAjax();
-        $this->useKey();
-        
+        $this->useKey();        
     }
 
+    /**
+     * Fungsi untuk implementasi key pada request
+     * @author Ayatulloh Ahad R <ayatulloh@indiega.net>
+     */
     private function useKey()
     {
         // jika $this->config->rest_enable_keys = true check table exist
@@ -193,6 +196,10 @@ class RestController extends ResourceController
         }
     }
 
+    /**
+     * Fungsi untuk implementasi CORS pada request
+     * @author Ayatulloh Ahad R <ayatulloh@indiega.net>
+     */
     private function useCORS()
     {
         if($this->check_cors){
@@ -216,6 +223,10 @@ class RestController extends ResourceController
         }
     }
 
+    /**
+     * Fungsi untuk implementasi hanya Ajax yang diperbolehkan pada request
+     * @author Ayatulloh Ahad R <ayatulloh@indiega.net>
+     */
     private function useOnlyAjax()
     {
         if($this->rest_ajax_only){
@@ -226,6 +237,10 @@ class RestController extends ResourceController
         }
     }
 
+    /**
+     * Fungsi untuk IP Blacklist Filter pada request
+     * @author Ayatulloh Ahad R <ayatulloh@indiega.net>
+     */
     private function useIPBlacklistFilter()
     {
         if( !$this->config->rest_ip_blacklist_enabled ) return true;
@@ -235,9 +250,12 @@ class RestController extends ResourceController
             $this->statusCode = 403;
             return $this->setResponseMessage(false, 'Your IP address is blocked to access this endpoint');
         }
-
     }
 
+    /**
+     * Fungsi untuk IP Whitelist Filter pada request
+     * @author Ayatulloh Ahad R <ayatulloh@indiega.net>
+     */
     private function useOnlyIPWhiteLists()
     {
         if( !$this->config->rest_ip_whitelist_enabled ) return true;
@@ -250,6 +268,11 @@ class RestController extends ResourceController
         }
     }
 
+    /**
+     * Fungsi untuk implementasi method filter pada request
+     * hanya method yang di definisikan di config yang diperbolehkan
+     * @author Ayatulloh Ahad R <ayatulloh@indiega.net>
+     */
     private function useMethodFilter(){
         $method = $this->request->getMethod();
 
@@ -262,6 +285,13 @@ class RestController extends ResourceController
         }
     }
 
+    /**
+     * Fungsi untuk implementasi output format pada request
+     * hanya format yang di definisikan di config yang diperbolehkan
+     * jika config rest_default_format = based_controller maka format akan diambil dari controller
+     * jika config rest_default_format = json maka format akan di set menjadi json
+     * jika config rest_default_format = xml maka format akan di set menjadi xml
+     */
     private function useOutputFormat(){
         /** output format */
         if($this->config->rest_default_format != 'based_controller'){
@@ -272,40 +302,66 @@ class RestController extends ResourceController
             $this->setFormat($this->config->rest_default_format);
         }
     }
-
-    private function useJWT(){
-        if($this->config->rest_auth != 'JWT'){
+    
+    /**
+     * Fungsi untuk implementasi JWT pada request
+     * jika config rest_auth = JWT maka akan di implementasikan
+     */
+    private function useJWT()
+    {
+        $rest_auth = $this->config->rest_auth;
+        if( ! $rest_auth ){
             return true;
         }
 
-        $header         = $this->request->getServer('HTTP_AUTHORIZATION');
-        $JWT_SECRET_KEY     = $this->config->rest_JWT_secret;
-        $JWT_TIME_TO_LIVE   = $this->config->rest_JWT_timetolive;
-
-        try {
-
-            $LibJWT         = new \Ay4t\Ci4rest\JWT\FirebaseJWT($JWT_SECRET_KEY, $JWT_TIME_TO_LIVE);
-            $encodedToken   = $LibJWT->headerOtenticate($header);
-            $validateJWT    = $LibJWT->validateJWT($encodedToken);
-
-            if($this->use_JWT_refresh_token){
-                unset($validateJWT->iat, $validateJWT->exp );
-                $time_start         = time();
-                $expired_time       = $time_start + $JWT_TIME_TO_LIVE;
-                $payload            = (array) $validateJWT;
-                $payload['iat']     = $time_start;
-                $payload['exp']     = $expired_time;
-                $this->rest_response['refresh_token'] = $LibJWT->setToken($payload);
+        if($rest_auth == 'basic'){
+            // otentikasi rest dengan basic auth
+            $username = $this->request->getServer('PHP_AUTH_USER');
+            $password = $this->request->getServer('PHP_AUTH_PW');
+            foreach ($this->config->rest_valid_logins as $key => $value) {
+                if($username == $key && $password == $value){
+                    return true;
+                } else {
+                    $this->statusCode = 403;
+                    return $this->setResponseMessage(false, 'Your username or password is not valid');
+                }
             }
+        }
 
-            return $validateJWT;
-
-        } catch (Exception $e) {
-            $this->statusCode = 403;
-            return $this->setResponseMessage(false, $e->getMessage());
+        if($rest_auth == 'JWT'){
+            $header         = $this->request->getServer('HTTP_AUTHORIZATION');
+            $JWT_SECRET_KEY     = $this->config->rest_JWT_secret;
+            $JWT_TIME_TO_LIVE   = $this->config->rest_JWT_timetolive;
+    
+            try {
+    
+                $LibJWT         = new \Ay4t\Ci4rest\JWT\FirebaseJWT($JWT_SECRET_KEY, $JWT_TIME_TO_LIVE);
+                $encodedToken   = $LibJWT->headerOtenticate($header);
+                $validateJWT    = $LibJWT->validateJWT($encodedToken);
+    
+                if($this->use_JWT_refresh_token){
+                    unset($validateJWT->iat, $validateJWT->exp );
+                    $time_start         = time();
+                    $expired_time       = $time_start + $JWT_TIME_TO_LIVE;
+                    $payload            = (array) $validateJWT;
+                    $payload['iat']     = $time_start;
+                    $payload['exp']     = $expired_time;
+                    $this->rest_response['refresh_token'] = $LibJWT->setToken($payload);
+                }
+    
+                return $validateJWT;
+    
+            } catch (Exception $e) {
+                $this->statusCode = 403;
+                return $this->setResponseMessage(false, $e->getMessage());
+            }            
         }
     }
 
+    /**
+     * Fungsi untuk implementasi HTTPS pada request
+     * jika config force_https = true maka akan di implementasikan
+     */
     private function useSecureRequest()
     {
         if(!$this->config->force_https){

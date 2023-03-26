@@ -104,18 +104,6 @@ class App extends \Config\App
 
     /*
     |--------------------------------------------------------------------------
-    | REST Realm
-    |--------------------------------------------------------------------------
-    |
-    | Name of the password protected REST API displayed on login dialogs
-    |
-    | e.g: My Secret REST API
-    |
-    */
-    public $rest_realm =  'REST API';
-
-    /*
-    |--------------------------------------------------------------------------
     | REST Login
     |--------------------------------------------------------------------------
     |
@@ -153,6 +141,18 @@ class App extends \Config\App
         'PUT',
         'DELETE',
     ];
+    
+    /*
+    |--------------------------------------------------------------------------
+    | REST Realm
+    |--------------------------------------------------------------------------
+    |
+    | Name of the password protected REST API displayed on login dialogs
+    |
+    | e.g: My Secret REST API
+    |
+    */
+    public $rest_realm =  'REST API';
 
     /*
     |--------------------------------------------------------------------------
@@ -338,7 +338,7 @@ class App extends \Config\App
     | public $this->method array for each controller
     |
     | Default table schema:
-    |   CREATE TABLE `logs` (
+    |   CREATE TABLE `tb_logs` (
     |       `id` INT(11) NOT NULL AUTO_INCREMENT,
     |       `uri` VARCHAR(255) NOT NULL,
     |       `method` VARCHAR(6) NOT NULL,
