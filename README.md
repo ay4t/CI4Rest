@@ -26,6 +26,10 @@ composer require ay4t/ci4rest:main-dev
 ```
     
 ## Contoh Penggunaan
+pastikan Controller anda sudah extends controller dengan RestController
+```
+class NamaController extends \Ay4t\Ci4rest\RestController
+```
 
 ```bash
 public function index()
