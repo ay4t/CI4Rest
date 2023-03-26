@@ -127,58 +127,68 @@ class RestController extends ResourceController
     private function useKey()
     {
         // jika $this->config->rest_enable_keys = true check table exist
-        if($this->config->rest_enable_keys){
-            if(!$this->db->tableExists($this->config->rest_keys_table)){
-                $this->statusCode = 500;
-                $this->setResponseMessage(false, 'Table '.$this->config->rest_keys_table.' not found');
+        if(!$this->config->rest_enable_keys){
+            return true;
+        }
+
+        if(!$this->db->tableExists($this->config->rest_keys_table)){
+            $this->statusCode = 500;
+            return $this->setResponseMessage(false, 'Table '.$this->config->rest_keys_table.' not found');
+        }
+
+        $key        = false;
+        $passedRequireHeader   = false;
+
+        // jika key request method = params
+        if($this->config->rest_key_request_method == 'params'){
+            $key = $this->request->getGet($this->config->rest_key_name);
+            if(empty($key)){
+                $this->statusCode = 403;
+                return $this->setResponseMessage(false, 'API key not exist in params');
             } else {
+                $passedRequireHeader = true;
+            }
+        }
 
-                $key = false;
+        // jika key request method = headers
+        if($this->config->rest_key_request_method == 'headers'){
+            $key = $this->request->getHeader($this->config->rest_key_name);
+            if(empty($key)){
+                $this->statusCode = 403;
+                return $this->setResponseMessage(false, 'API key not exist in headers');
+            } else {
+                $passedRequireHeader = true;
+            }
+        }
+        
+        if($passedRequireHeader){
+            // check key kedalam table 
+            $query = $this->db->table($this->config->rest_keys_table)
+            ->where($this->config->rest_key_column, $key)
+            ->get()
+            ->getRow();
+            if( ! $query ){
+                $this->statusCode = 403;
+                return $this->setResponseMessage(false, 'API key is invalid');
+            }
 
-                // jika key request method = params
-                if($this->config->rest_key_request_method == 'params'){
-                    $key = $this->request->getGet($this->config->rest_key_name);
-                    if(empty($key)){
-                        $this->statusCode = 403;
-                        $this->setResponseMessage(false, 'API key is required');
-                    }
-                }
+                // jika key ditemukan, cek apakah key tersebut masih aktif
+            if($query->active == 0){
+                $this->statusCode = 403;
+                return $this->setResponseMessage(false, 'Your API key is inactive');
+            }
 
-                // jika key request method = headers
-                if($this->config->rest_key_request_method == 'headers'){
-                    $key = $this->request->getHeader($this->config->rest_key_name);
-                    if(empty($key)){
-                        $this->statusCode = 403;
-                        $this->setResponseMessage(false, 'API key is required');
-                    }
-                }
+            // jika ip_addresses != NULL validate dengan IP address yang request
+            if(!empty($query->ip_addresses)){
+                $ip_addresses = explode(',', $query->ip_addresses);
 
-                // check key kedalam table 
-                $query = $this->db->table($this->config->rest_keys_table)
-                    ->where($this->config->rest_key_column, $key)
-                    ->get()
-                    ->getRow();
-                if($query && $key ){
-                    // jika key ditemukan, cek apakah key tersebut masih aktif
-                    if($query->active == 0){
-                        $this->statusCode = 403;
-                        $this->setResponseMessage(false, 'API key is inactive');
-                    }
+                // make an array value from $ip_addresses to trim
+                $ip_addresses = array_map('trim', $ip_addresses);
 
-                    // jika ip_addresses != NULL validate dengan IP address yang request
-                    if(!empty($query->ip_addresses)){
-                        $ip_addresses = explode(',', $query->ip_addresses);
-                        if(!in_array($this->request->getIPAddress(), $ip_addresses)){
-                            $this->statusCode = 403;
-                            $this->setResponseMessage(false, 'Your IP address is not allowed to access this endpoint');
-                        }
-                    }
-                    
-                } else {
+                if(!in_array($this->request->getIPAddress(), $ip_addresses)){
                     $this->statusCode = 403;
-                    $this->setResponseMessage(false, 'API key is invalid');
+                    return $this->setResponseMessage(false, 'Your IP address is not allowed to access this endpoint');
                 }
-
             }
         }
     }
@@ -190,7 +200,7 @@ class RestController extends ResourceController
             if(!empty($this->config->allowed_cors_origins)){
                 if( !in_array($this->request->getHeaderLine('Origin'), $this->config->allowed_cors_origins) ){
                     $this->statusCode = 403;
-                    $this->setResponseMessage(false, 'Your origin is not allowed to access this endpoint');
+                    return $this->setResponseMessage(false, 'Your origin is not allowed to access this endpoint');
                 }
             }
 
@@ -211,7 +221,7 @@ class RestController extends ResourceController
         if($this->rest_ajax_only){
             if( !$this->request->isAJAX() ){
                 $this->statusCode = 403;
-                $this->setResponseMessage(false, 'Only available for ajax request.');
+                return $this->setResponseMessage(false, 'Only available for ajax request.');
             }
         }
     }
@@ -223,7 +233,7 @@ class RestController extends ResourceController
         $ip_address = $this->request->getIPAddress();
         if( in_array($ip_address, $this->config->rest_ip_blacklist) ){
             $this->statusCode = 403;
-            $this->setResponseMessage(false, 'Your IP address is blocked to access this endpoint');
+            return $this->setResponseMessage(false, 'Your IP address is blocked to access this endpoint');
         }
 
     }
@@ -236,7 +246,7 @@ class RestController extends ResourceController
         $alwaysAllowed = ['127.0.0.1', '::1'];
         if( !in_array($ip_address, array_merge($this->config->rest_ip_whitelist, $alwaysAllowed) ) ){
             $this->statusCode = 403;
-            $this->setResponseMessage(false, 'Your IP address is not allowed to access this endpoint');
+            return $this->setResponseMessage(false, 'Your IP address is not allowed to access this endpoint');
         }
     }
 
@@ -248,7 +258,7 @@ class RestController extends ResourceController
 
         if(!in_array( strtoupper($method) , $this->config->rest_allowed_method)){
             $this->statusCode = 403;
-            $this->setResponseMessage(false, 'Only available method for  ( '. implode(', ', $this->config->rest_allowed_method) .' ).');
+            return $this->setResponseMessage(false, 'Only available method for  ( '. implode(', ', $this->config->rest_allowed_method) .' ).');
         }
     }
 
@@ -257,7 +267,7 @@ class RestController extends ResourceController
         if($this->config->rest_default_format != 'based_controller'){
             if( ! in_array($this->config->rest_default_format, $this->config->rest_supported_formats) ){
                 $this->statusCode = 403;
-                $this->setResponseMessage(false, 'Only available for format ( '. implode(', ', $this->config->rest_supported_formats) .' ).');
+                return $this->setResponseMessage(false, 'Only available for format ( '. implode(', ', $this->config->rest_supported_formats) .' ).');
             }
             $this->setFormat($this->config->rest_default_format);
         }
@@ -292,7 +302,7 @@ class RestController extends ResourceController
 
         } catch (Exception $e) {
             $this->statusCode = 403;
-            $this->setResponseMessage(false, $e->getMessage());
+            return $this->setResponseMessage(false, $e->getMessage());
         }
     }
 
@@ -304,7 +314,7 @@ class RestController extends ResourceController
 
         if(!Security::isSecureCheck($this->request)){
             $this->statusCode = 403;
-            $this->setResponseMessage(false, 'You must use the HTTPS protocol to access this endpoint');
+            return $this->setResponseMessage(false, 'You must use the HTTPS protocol to access this endpoint');
         }
     }
 
