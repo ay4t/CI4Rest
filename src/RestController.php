@@ -133,38 +133,50 @@ class RestController extends ResourceController
                 $this->setResponseMessage(false, 'Table '.$this->config->rest_keys_table.' not found');
             } else {
 
-                if($this->config->rest_key_column){
-                    $key = $this->request->getGet($this->config->rest_key_column);
+                $key = false;
+
+                // jika key request method = params
+                if($this->config->rest_key_request_method == 'params'){
+                    $key = $this->request->getGet($this->config->rest_key_name);
                     if(empty($key)){
                         $this->statusCode = 403;
                         $this->setResponseMessage(false, 'API key is required');
                     }
+                }
 
-                    // check key kedalam table 
-                    $query = $this->db->table($this->config->rest_keys_table)
-                        ->where($this->config->rest_key_column, $key)
-                        ->get()
-                        ->getRow();
-                    if($query){
-                        // jika key ditemukan, cek apakah key tersebut masih aktif
-                        if($query->active == 0){
-                            $this->statusCode = 403;
-                            $this->setResponseMessage(false, 'API key is inactive');
-                        }
-
-                        // jika ip_addresses != NULL validate dengan IP address yang request
-                        if(!empty($query->ip_addresses)){
-                            $ip_addresses = explode(',', $query->ip_addresses);
-                            if(!in_array($this->request->getIPAddress(), $ip_addresses)){
-                                $this->statusCode = 403;
-                                $this->setResponseMessage(false, 'Your IP address is not allowed to access this endpoint');
-                            }
-                        }
-                        
-                    } else {
+                // jika key request method = headers
+                if($this->config->rest_key_request_method == 'headers'){
+                    $key = $this->request->getHeader($this->config->rest_key_name);
+                    if(empty($key)){
                         $this->statusCode = 403;
-                        $this->setResponseMessage(false, 'API key is invalid');
+                        $this->setResponseMessage(false, 'API key is required');
                     }
+                }
+
+                // check key kedalam table 
+                $query = $this->db->table($this->config->rest_keys_table)
+                    ->where($this->config->rest_key_column, $key)
+                    ->get()
+                    ->getRow();
+                if($query && $key ){
+                    // jika key ditemukan, cek apakah key tersebut masih aktif
+                    if($query->active == 0){
+                        $this->statusCode = 403;
+                        $this->setResponseMessage(false, 'API key is inactive');
+                    }
+
+                    // jika ip_addresses != NULL validate dengan IP address yang request
+                    if(!empty($query->ip_addresses)){
+                        $ip_addresses = explode(',', $query->ip_addresses);
+                        if(!in_array($this->request->getIPAddress(), $ip_addresses)){
+                            $this->statusCode = 403;
+                            $this->setResponseMessage(false, 'Your IP address is not allowed to access this endpoint');
+                        }
+                    }
+                    
+                } else {
+                    $this->statusCode = 403;
+                    $this->setResponseMessage(false, 'API key is invalid');
                 }
 
             }

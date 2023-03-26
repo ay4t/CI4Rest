@@ -319,6 +319,14 @@ class App extends \Config\App
     |
     */
     public $rest_key_name =  'X-API-KEY';
+    
+    /*
+    | REST API Key Request Method
+
+    | Specify the method used to pass the API key
+    | Available methods are : 'params' or 'headers'
+    */
+    public $rest_key_request_method = 'params';
 
     /*
     |--------------------------------------------------------------------------
