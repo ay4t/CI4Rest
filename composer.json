@@ -3,7 +3,8 @@
     "description": "Advanced REST Controller yang dikembangkan untuk mempermudah dalam penerapan REST API",
     "type": "library",
     "require": {
-        "firebase/php-jwt": "^6.4"
+        "firebase/php-jwt": "^6.4",
+        "codeigniter4/framework": "^4.3"
     },
     "license": "MIT",
     "autoload": {

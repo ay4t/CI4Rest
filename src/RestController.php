@@ -243,7 +243,7 @@ class RestController extends ResourceController
     }
 
 
-    private function setResponseMessage( $status = true, $message = 'OK' ){
+    protected function setResponseMessage( $status = true, $message = 'OK' ){
         $this->rest_response[ $this->config->rest_status_field_name ]     = $status;
         $this->rest_response[ $this->config->rest_message_field_name ]    = $message;
         return $this->rest_response;
