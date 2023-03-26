@@ -35,9 +35,6 @@ class RestController extends ResourceController
     /** @return \Config\Services::request(); */
     protected $requst;
 
-    /** @var string */
-    protected $defaultFormat;
-
     /** @var bool $rest_ajax_only description */
     protected $rest_ajax_only = false;
 
@@ -53,9 +50,6 @@ class RestController extends ResourceController
     /** @var int */
     protected $statusCode = 200;
 
-    /** @var array */
-    protected $rest_allowed_method = [];
-
     /** @return \Config\Database::connect() */
     protected $db;
 
@@ -64,12 +58,9 @@ class RestController extends ResourceController
         $this->config               = new \Ay4t\Ci4rest\App();
         $this->db                   = \Config\Database::connect($this->config->rest_database_group, true);
         $this->request              = \Config\Services::request();
-        $this->defaultFormat        = $this->config->rest_default_format;
-        $this->rest_allowed_method  = $this->config->rest_allowed_method;
         $this->rest_ajax_only       = $this->config->rest_ajax_only;
         $this->check_cors           = $this->config->check_cors;
 
-        $this->setResponseMessage(true, 'OK');
     }
 
     /**
@@ -78,10 +69,19 @@ class RestController extends ResourceController
      */
     public function index()
     {
+        $this->setResponseMessage(true, 'OK');
         $this->initMethod();
 
         /** tambahkan code disini jika ingin berjalan secara global di semua child class */
 
+
+        /** filter hanya status dan message saja yang akan tampil di response */
+        if(!$this->rest_response[$this->config->rest_status_field_name]){
+            $whitelist  = [$this->config->rest_status_field_name, $this->config->rest_message_field_name];
+            $filtered   = array_intersect_key( $this->rest_response, array_flip( $whitelist ) );
+            return $this->respond($filtered, $this->statusCode);
+        }
+        
         return $this->respond($this->rest_response, $this->statusCode);
     }
 
@@ -91,10 +91,18 @@ class RestController extends ResourceController
      */
     public function create()
     {
+        $this->setResponseMessage(true, 'OK');
         $this->initMethod();
 
         /** tambahkan code disini jika ingin berjalan secara global di semua child class */
 
+        /** filter hanya status dan message saja yang akan tampil di response */
+        if(!$this->rest_response[$this->config->rest_status_field_name]){
+            $whitelist  = [$this->config->rest_status_field_name, $this->config->rest_message_field_name];
+            $filtered   = array_intersect_key( $this->rest_response, array_flip( $whitelist ) );
+            return $this->respond($filtered, $this->statusCode);
+        }
+        
         return $this->respond($this->rest_response, $this->statusCode);
     }
 
@@ -112,13 +120,6 @@ class RestController extends ResourceController
         $this->useOnlyIPWhiteLists();
         $this->useIPBlacklistFilter();
         $this->useOnlyAjax();
-
-        /** filter hanya status dan message saja yang akan tampil di response */
-        if(!$this->rest_response[$this->config->rest_status_field_name]){
-            $whitelist  = [$this->config->rest_status_field_name, $this->config->rest_message_field_name];
-            $filtered   = array_intersect_key( $this->rest_response, array_flip( $whitelist ) );
-            return $this->respond($filtered, $this->statusCode);
-        }
     }
 
     private function useCORS()
@@ -180,20 +181,24 @@ class RestController extends ResourceController
 
     private function useMethodFilter(){
         $method = $this->request->getMethod();
-        if(!in_array( strtoupper($method) , $this->rest_allowed_method)){
+
+        // make an array value from $this->config->rest_allowed_method to uppercase
+        $this->config->rest_allowed_method = array_map('strtoupper', $this->config->rest_allowed_method);
+
+        if(!in_array( strtoupper($method) , $this->config->rest_allowed_method)){
             $this->statusCode = 403;
-            $this->setResponseMessage(false, 'Only available method for  ( '. implode(', ', $this->rest_allowed_method) .' ).');
+            $this->setResponseMessage(false, 'Only available method for  ( '. implode(', ', $this->config->rest_allowed_method) .' ).');
         }
     }
 
     private function useOutputFormat(){
         /** output format */
-        if($this->defaultFormat != 'based_controller'){
-            if( ! in_array($this->defaultFormat, $this->config->rest_supported_formats) ){
+        if($this->config->rest_default_format != 'based_controller'){
+            if( ! in_array($this->config->rest_default_format, $this->config->rest_supported_formats) ){
                 $this->statusCode = 403;
                 $this->setResponseMessage(false, 'Only available for format ( '. implode(', ', $this->config->rest_supported_formats) .' ).');
             }
-            $this->setFormat($this->defaultFormat);
+            $this->setFormat($this->config->rest_default_format);
         }
     }
 
@@ -208,7 +213,7 @@ class RestController extends ResourceController
 
         try {
 
-            $LibJWT         = new \Ay4t\CI4Rest\JWT\FirebaseJWT($JWT_SECRET_KEY, $JWT_TIME_TO_LIVE);
+            $LibJWT         = new \Ay4t\Ci4rest\JWT\FirebaseJWT($JWT_SECRET_KEY, $JWT_TIME_TO_LIVE);
             $encodedToken   = $LibJWT->headerOtenticate($header);
             $validateJWT    = $LibJWT->validateJWT($encodedToken);
 
