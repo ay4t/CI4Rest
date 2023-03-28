@@ -315,7 +315,7 @@ class App extends \Config\App
 
     /*
     |--------------------------------------------------------------------------
-    | REST Enable Logging
+    | REST Enable Logging (Coming Soon)
     |--------------------------------------------------------------------------
     |
     | When set to TRUE, the REST API will log actions based on the column names 'key', 'date',
@@ -426,9 +426,9 @@ class App extends \Config\App
     |
     | Available methods are :
     | public $rest_limits_method =  'IP_ADDRESS'; // Put a limit per ip address
-    | public $rest_limits_method =  'API_KEY'; // Put a limit per api key
-    | public $rest_limits_method =  'METHOD_NAME'; // Put a limit on method calls
-    | public $rest_limits_method =  'ROUTED_URL';  // Put a limit on the routed URL
+    | (Coming Soon) public $rest_limits_method =  'API_KEY'; // Put a limit per api key
+    | (Coming Soon) public $rest_limits_method =  'METHOD_NAME'; // Put a limit on method calls
+    | (Coming Soon) public $rest_limits_method =  'ROUTED_URL';  // Put a limit on the routed URL
     |
     */
     public $rest_limits_method =  'IP_ADDRESS';
@@ -468,7 +468,7 @@ class App extends \Config\App
     | Coming Soon
     |
     */
-    public $rest_language =  'english';
+    public $rest_language =  'en';
 
     /*
     |--------------------------------------------------------------------------

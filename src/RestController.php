@@ -48,6 +48,7 @@ class RestController extends ResourceController
     protected $db;
 
     protected $ip_address;
+    protected $uri;
 
     public function __construct()
     {
@@ -55,6 +56,7 @@ class RestController extends ResourceController
         $this->db                   = \Config\Database::connect($this->config->rest_database_group, true);
         $this->request              = \Config\Services::request();
         $this->ip_address           = $this->request->getIPAddress();
+        $this->uri                  = $this->request->getPath();
 
     }
 
@@ -107,7 +109,6 @@ class RestController extends ResourceController
      */
     private function initMethod()
     {
-        $this->limitMethod();
         $this->useCORS();
         $this->useJWT();
         $this->useOutputFormat();
@@ -134,31 +135,28 @@ class RestController extends ResourceController
             return $this->setResponseMessage(false, 'Table '.$this->config->rest_limits_table.' not found');
         }
 
-        $uri = $this->request->getPath();
-        $limit = $this->db->table($this->config->rest_limits_table)
-            ->where('uri', $uri)
-            ->get()
-            ->getRow();
+        $getLimit = $this->db->table($this->config->rest_limits_table)
+            ->where('uri', $this->uri);
+            
+        $limit = $getLimit->get()->getRow();
         if(!$limit){
             /** tambahkan row baru karena belum ada di table limits */
             $this->db->table($this->config->rest_limits_table)
                 ->insert([
-                    'uri' => $uri,
+                    'uri' => $this->uri,
                     'count' => 0,
                     'hour_started' => time(),
                     'method' => $this->config->rest_limits_method
-                ]);
-            
+                ]);            
             return true;
         }
 
         /** membuat reset count jika hour_started < 1 jam dari sekarang */
-        if($limit->hour_started < date('Y-m-d H:i:s', strtotime('-1 hour'))){
-            $this->db->table($this->config->rest_limits_table)
-                ->where('uri', $uri)
-                ->update([
+        $expired_time = date('Y-m-d H:i:s', strtotime('-1 hour'));
+        if($limit->hour_started < strtotime($expired_time) ){
+            $getLimit->update([
                     'count' => 0,
-                    'hour_started' => date('Y-m-d H:i:s')
+                    'hour_started' => time()
                 ]);
         }
 
@@ -170,15 +168,12 @@ class RestController extends ResourceController
                 $this->config->rest_ip_blacklist = [
                     $this->ip_address
                 ];
+                return false;
             }
-
-            return false;
         }
 
         /** buat increment count pada $limit */
-        $this->db->table($this->config->rest_limits_table)
-            ->where('uri', $uri)
-            ->update([
+        $getLimit->update([
                 'count' => $limit->count + 1
             ]);
         
