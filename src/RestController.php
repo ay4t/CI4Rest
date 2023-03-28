@@ -47,11 +47,14 @@ class RestController extends ResourceController
     /** @return \Config\Database::connect() */
     protected $db;
 
+    protected $ip_address;
+
     public function __construct()
     {
         $this->config               = new \Ay4t\Ci4rest\App();
         $this->db                   = \Config\Database::connect($this->config->rest_database_group, true);
         $this->request              = \Config\Services::request();
+        $this->ip_address           = $this->request->getIPAddress();
 
     }
 
@@ -104,6 +107,7 @@ class RestController extends ResourceController
      */
     private function initMethod()
     {
+        $this->limitMethod();
         $this->useCORS();
         $this->useJWT();
         $this->useOutputFormat();
@@ -113,6 +117,71 @@ class RestController extends ResourceController
         $this->useIPBlacklistFilter();
         $this->useOnlyAjax();
         $this->useKey();        
+    }
+
+    protected function limitMethod( $request_per_hour = 10 )
+    {
+        /** implementasi limit pada method yang memanggil function ini dengan pair dengan $this->config->rest_limits_method
+         * configurasi limit diatus pada table tb_limit
+         * jika $this->rest_limits_method == 'IP_ADDRESS' maka akan di cek limit berdasarkan IP_ADDRESS';
+         */
+        if(!$this->config->rest_enable_limits){
+            return true;
+        }
+        
+        if(!$this->db->tableExists($this->config->rest_limits_table)){
+            $this->statusCode = 500;
+            return $this->setResponseMessage(false, 'Table '.$this->config->rest_limits_table.' not found');
+        }
+
+        $uri = $this->request->getPath();
+        $limit = $this->db->table($this->config->rest_limits_table)
+            ->where('uri', $uri)
+            ->get()
+            ->getRow();
+        if(!$limit){
+            /** tambahkan row baru karena belum ada di table limits */
+            $this->db->table($this->config->rest_limits_table)
+                ->insert([
+                    'uri' => $uri,
+                    'count' => 0,
+                    'hour_started' => time(),
+                    'method' => $this->config->rest_limits_method
+                ]);
+            
+            return true;
+        }
+
+        /** membuat reset count jika hour_started < 1 jam dari sekarang */
+        if($limit->hour_started < date('Y-m-d H:i:s', strtotime('-1 hour'))){
+            $this->db->table($this->config->rest_limits_table)
+                ->where('uri', $uri)
+                ->update([
+                    'count' => 0,
+                    'hour_started' => date('Y-m-d H:i:s')
+                ]);
+        }
+
+        /** jika data limit method == IP_ADDRESS */
+        if($limit->method == 'IP_ADDRESS'){
+            // jika request_per_hour >= $limit->count
+            if($limit->count >= $request_per_hour ){
+                $this->config->rest_ip_blacklist_enabled = true;
+                $this->config->rest_ip_blacklist = [
+                    $this->ip_address
+                ];
+            }
+
+            return false;
+        }
+
+        /** buat increment count pada $limit */
+        $this->db->table($this->config->rest_limits_table)
+            ->where('uri', $uri)
+            ->update([
+                'count' => $limit->count + 1
+            ]);
+        
     }
 
     /**

@@ -279,21 +279,6 @@ class App extends \Config\App
     */
     public $rest_key_column =  'key';
 
-    /*
-    |--------------------------------------------------------------------------
-    | REST API Limits method
-    |--------------------------------------------------------------------------
-    |
-    | Specify the method used to limit the API calls
-    |
-    | Available methods are :
-    | public $rest_limits_method =  'IP_ADDRESS'; // Put a limit per ip address
-    | public $rest_limits_method =  'API_KEY'; // Put a limit per api key
-    | public $rest_limits_method =  'METHOD_NAME'; // Put a limit on method calls
-    | public $rest_limits_method =  'ROUTED_URL';  // Put a limit on the routed URL
-    |
-    */
-    public $rest_limits_method =  'ROUTED_URL';
 
     /*
     |--------------------------------------------------------------------------
@@ -420,23 +405,33 @@ class App extends \Config\App
     | public $this->method array in each controller
     |
     | Default table schema:
-    |   CREATE TABLE `limits` (
+    |   CREATE TABLE `tb_limits` (
     |       `id` INT(11) NOT NULL AUTO_INCREMENT,
     |       `uri` VARCHAR(255) NOT NULL,
     |       `count` INT(10) NOT NULL,
     |       `hour_started` INT(11) NOT NULL,
-    |       `api_key` VARCHAR(40) NOT NULL,
+    |       `method` VARCHAR(20) NOT NULL DEFAULT 'IP_ADDRESS',
     |       PRIMARY KEY (`id`)
     |   ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     |
-    | To specify the limits within the controller's __construct() method, add per-method
-    | limits with:
-    |
-    |       public $this->methods['METHOD_NAME']['limit'] =  [NUM_REQUESTS_PER_HOUR];
-    |
-    | See application/controllers/api/example.php for examples
     */
-    public $rest_enable_limits =  false;
+    public $rest_enable_limits =  true;
+
+    /*
+    |--------------------------------------------------------------------------
+    | REST API Limits method
+    |--------------------------------------------------------------------------
+    |
+    | Specify the method used to limit the API calls
+    |
+    | Available methods are :
+    | public $rest_limits_method =  'IP_ADDRESS'; // Put a limit per ip address
+    | public $rest_limits_method =  'API_KEY'; // Put a limit per api key
+    | public $rest_limits_method =  'METHOD_NAME'; // Put a limit on method calls
+    | public $rest_limits_method =  'ROUTED_URL';  // Put a limit on the routed URL
+    |
+    */
+    public $rest_limits_method =  'IP_ADDRESS';
 
     /*
     |--------------------------------------------------------------------------
@@ -447,7 +442,7 @@ class App extends \Config\App
     | table name to match e.g. my_limits
     |
     */
-    public $rest_limits_table =  'limits';
+    public $rest_limits_table =  'tb_limits';
 
     /*
     |--------------------------------------------------------------------------
