@@ -26,7 +26,7 @@ pastikan Controller anda sudah extends controller dengan RestController
 class NamaController extends \Ay4t\Ci4rest\RestController
 ```
 
-contoh penerapan pada method index controller anda
+contoh penerapan pada method index controller anda. method index adalah method default yang diakses untuk GET request pada codeigniter 4
 ```bash
 public function index()
 {
@@ -51,6 +51,9 @@ public function index()
 
     /** memberikan header response untuk CORS */
     $this->config->check_cors = true;
+
+    /** untuk menambahkan limitter pada method ini */
+    $this->limitMethod( $request_per_hour = 100 );
     
     /** untuk menambahkan response secara manual */
     $this->addResponse('some_response', 'some_value');
@@ -64,4 +67,33 @@ public function index()
     return parent::index();
 }
 ```
+contoh penerapan pada method create controller anda. method create adalah method default yang diakses untuk GET request pada codeigniter 4
+```bash
+public function create()
+{
+    /** menggunakan otentikasi JWT */
+    $this->config->rest_auth    = 'JWT';
 
+    /** setting true secara otomatis mendapatkan token JWT yang baru */
+    $this->use_JWT_refresh_token = true;
+
+    /** filter khusus untuk method yang hanya diperbolehkan */
+    $this->config->rest_allowed_method = ['post'];
+
+    /** filter jika ingin menggunakan hanya akses dengan AJAX / X-Requested-With:XMLHttpRequest header */
+    $this->config->rest_ajax_only = true;
+
+    /** memberikan header response untuk CORS */
+    $this->config->check_cors = true;
+
+    /** validate your form here */
+
+    /** untuk menambahkan response secara manual dengan array */
+    $this->addResponse([
+        'some_response2' => 'some_value2',
+        'some_response3' => 'some_value3',
+    ]);
+
+    return parent::create();
+}
+```
