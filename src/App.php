@@ -91,6 +91,12 @@ class App extends \Config\App
     */
     public $rest_message_field_name =  'message';
 
+    public $whitelist_response =  [
+        'csrf_token',
+        'heading',
+        'type',
+    ];
+
     /*
     |--------------------------------------------------------------------------
     | Enable Emulate Request

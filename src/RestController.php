@@ -48,7 +48,15 @@ class RestController extends ResourceController
     protected $db;
 
     protected $ip_address;
+    
     protected $uri;
+    
+    /**
+     * setting untuk menentukan apakah response lain akan di tampilkan atau tidak ketika status false. jika di setting false, maka response yang muncul hanya yang di whitelist
+     * @var bool
+     * @author Ayatulloh Ahad R <ayatulloh@indiega.net>
+     */
+    protected $preventResponseOnFail = true;
 
     public function __construct()
     {
@@ -58,6 +66,8 @@ class RestController extends ResourceController
         $this->ip_address           = $this->request->getIPAddress();
         $this->uri                  = $this->request->getPath();
 
+        /** letakkan disini agar supaya mempunyai default response status dan message  */
+        $this->setResponseMessage(true, 'OK');
     }
 
     /**
@@ -66,17 +76,18 @@ class RestController extends ResourceController
      */
     public function index()
     {
-        $this->setResponseMessage(true, 'OK');
         $this->initMethod();
 
         /** tambahkan code disini jika ingin berjalan secara global di semua child class */
 
 
-        /** filter hanya status dan message saja yang akan tampil di response */
-        if(!$this->rest_response[$this->config->rest_status_field_name]){
-            $whitelist  = [$this->config->rest_status_field_name, $this->config->rest_message_field_name];
-            $filtered   = array_intersect_key( $this->rest_response, array_flip( $whitelist ) );
-            return $this->respond($filtered, $this->statusCode);
+        if($this->preventResponseOnFail){
+            /** filter hanya status dan message saja yang akan tampil di response */
+            if(!$this->rest_response[$this->config->rest_status_field_name]){
+                $this->config->whitelist_response  = [$this->config->rest_status_field_name, $this->config->rest_message_field_name];
+                $filtered   = array_intersect_key( $this->rest_response, array_flip( $this->config->whitelist_response ) );
+                return $this->respond($filtered, $this->statusCode);
+            }
         }
         
         return $this->respond($this->rest_response, $this->statusCode);
@@ -88,16 +99,17 @@ class RestController extends ResourceController
      */
     public function create()
     {
-        $this->setResponseMessage(true, 'OK');
         $this->initMethod();
 
         /** tambahkan code disini jika ingin berjalan secara global di semua child class */
 
-        /** filter hanya status dan message saja yang akan tampil di response */
-        if(!$this->rest_response[$this->config->rest_status_field_name]){
-            $whitelist  = [$this->config->rest_status_field_name, $this->config->rest_message_field_name];
-            $filtered   = array_intersect_key( $this->rest_response, array_flip( $whitelist ) );
-            return $this->respond($filtered, $this->statusCode);
+        if($this->preventResponseOnFail){
+            /** filter hanya status dan message saja yang akan tampil di response */
+            if(!$this->rest_response[$this->config->rest_status_field_name]){
+                $this->config->whitelist_response  = [$this->config->rest_status_field_name, $this->config->rest_message_field_name];
+                $filtered   = array_intersect_key( $this->rest_response, array_flip( $this->config->whitelist_response ) );
+                return $this->respond($filtered, $this->statusCode);
+            }
         }
         
         return $this->respond($this->rest_response, $this->statusCode);
@@ -455,4 +467,29 @@ class RestController extends ResourceController
         return $this->rest_response;
     }
 
+
+    /**
+     * Set the value of preventResponseOnFail
+     *
+     * @returnself
+     */ 
+    public function setPreventResponseOnFail(bool $preventResponseOnFail)
+    {
+        $this->preventResponseOnFail = $preventResponseOnFail;
+        return $this;
+    }
+
+    /** buat addWhitelistResponse() */
+    public function addWhitelistResponse($key, $value = null){
+        // jika $key adalah array maka buat looping
+        if(is_array($key)){
+            foreach ($key as $k => $v) {
+                $this->config->whitelist_response[$k] = $v;
+            }
+            return $this->config->whitelist_response;
+        }
+
+        $this->config->whitelist_response[$key] = $value;
+        return $this->config->whitelist_response;
+    }
 }
