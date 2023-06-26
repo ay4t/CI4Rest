@@ -84,7 +84,10 @@ class RestController extends ResourceController
         if($this->preventResponseOnFail){
             /** filter hanya status dan message saja yang akan tampil di response */
             if(!$this->rest_response[$this->config->rest_status_field_name]){
-                $this->config->whitelist_response  = [$this->config->rest_status_field_name, $this->config->rest_message_field_name];
+                
+                $this->config->whitelist_response[]  = $this->config->rest_status_field_name;
+                $this->config->whitelist_response[]  = $this->config->rest_message_field_name;
+
                 $filtered   = array_intersect_key( $this->rest_response, array_flip( $this->config->whitelist_response ) );
                 return $this->respond($filtered, $this->statusCode);
             }
@@ -106,7 +109,10 @@ class RestController extends ResourceController
         if($this->preventResponseOnFail){
             /** filter hanya status dan message saja yang akan tampil di response */
             if(!$this->rest_response[$this->config->rest_status_field_name]){
-                $this->config->whitelist_response  = [$this->config->rest_status_field_name, $this->config->rest_message_field_name];
+                
+                $this->config->whitelist_response[]  = $this->config->rest_status_field_name;
+                $this->config->whitelist_response[]  = $this->config->rest_message_field_name;
+                
                 $filtered   = array_intersect_key( $this->rest_response, array_flip( $this->config->whitelist_response ) );
                 return $this->respond($filtered, $this->statusCode);
             }
