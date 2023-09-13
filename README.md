@@ -97,3 +97,5 @@ public function create()
     return parent::create();
 }
 ```
+# Issue
+jika ada masalah atau ide lainnya silahkan submit dan diskusi dibagian Issue :) atau jika anda ingin ikut berkontribusi dan merasa ini membantu silahkan fork repository ini dan tambahkan perubahan kemudia submit PR.
