@@ -67,7 +67,7 @@ public function index()
     return parent::index();
 }
 ```
-contoh penerapan pada method create controller anda. method create adalah method default yang diakses untuk GET request pada codeigniter 4
+contoh penerapan pada method create controller anda. method create adalah method default yang diakses untuk POST request pada codeigniter 4
 ```bash
 public function create()
 {
